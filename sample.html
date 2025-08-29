@@ -305,823 +305,879 @@
             justify-content: center;
             margin-top: 4px
         }
+
+        /* === Money Rain === */
+        #moneyRain {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            z-index: 0;
+            /* 背面 */
+            pointer-events: none;
+            /* クリックの邪魔をしない */
+        }
+
+        main,
+        header,
+        .card,
+        .wrap,
+        #lobby,
+        #gameArea {
+            position: relative;
+            z-index: 1;
+            /* 雨より上に表示 */
+        }
+
+        .bill {
+            position: absolute;
+            top: -12vh;
+            /* 画面上から落ちてくる */
+            font-size: clamp(18px, 2.2vw, 38px);
+            opacity: .85;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .35));
+            will-change: transform;
+            animation: billFall linear infinite;
+        }
+
+        /* 落下アニメーション */
+        @keyframes billFall {
+            0% {
+                transform: translate3d(var(--x, 0), -12vh, 0) rotate(var(--r0, 0deg));
+                opacity: .0;
+            }
+
+            5% {
+                opacity: .9;
+            }
+
+            100% {
+                transform: translate3d(var(--x, 0), 112vh, 0) rotate(var(--r1, 360deg));
+                opacity: .95;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <header>
-        <h1>
-            Texas Hold’em Online
-            <span class="badge" id="badgeSeats">—</span>
-            <span class="badge" id="badgeBTN">BTN: -</span>
-            <span class="badge" id="badgeBlinds">SB/BB: - / -</span>
-        </h1>
-        <div id="hdrRight" style="font-size:12px;opacity:.85"></div>
-    </header>
 
-    <main>
-        <div class="wrap">
-            <!-- Lobby -->
-            <div id="lobby" class="card">
-                <h2 style="margin:0 0 8px">ルーム作成 / 参加</h2>
-                <div class="row">
-                    <div>ルームID <input id="roomId" value="room123"></div>
-                    <div>名前 <input id="name" value="PlayerA"></div>
-                    <div>参加人数
-                        <select id="seatCount">
-                            <option>2</option>
-                            <option>3</option>
-                            <option>4</option>
-                            <option>5</option>
-                            <option selected>6</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px">
-                    <div>Buy-in <input type="number" id="buyIn" min="10000" max="50000" step="1000" value="20000"></div>
-                    <div>SB <input type="number" id="sb" min="50" max="5000" step="50" value="100"></div>
-                    <div>BB <input type="number" id="bb" min="100" max="10000" step="100" value="200"></div>
-                </div>
-                <div class="row" style="margin-top:8px">
-                    <button id="createRoom">作成して入室（ホスト）</button>
-                    <button id="joinRoom">入室のみ</button>
-                </div>
-                <div id="lobbyMsg" style="color:#ffb3b3;margin-top:8px"></div>
-            </div>
+    <body>
+        <!-- 💴 Money Rain Layer -->
+        <div id="moneyRain" aria-hidden="true"></div>
 
-            <!-- Table -->
-            <div id="gameArea" class="card" style="display:none">
-                <h2 style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px">
-                    <span>ルーム <span id="roomLabel">-</span></span>
-                    <span id="roleLabel" style="font-size:12px;opacity:.9">—</span>
-                </h2>
+        <header>
+            <h1>
+                Texas Hold’em Online
+                <span class="badge" id="badgeSeats">—</span>
+                <span class="badge" id="badgeBTN">BTN: -</span>
+                <span class="badge" id="badgeBlinds">SB/BB: - / -</span>
+            </h1>
+            <div id="hdrRight" style="font-size:12px;opacity:.85"></div>
+        </header>
 
-                <div id="table">
-                    <div id="turnArrow"></div>
-                    <div id="winnerBanner">
-                        <div class="title" id="wbTitle"></div>
-                        <div id="wbRole"></div>
-                        <div class="hand5" id="wbBest5"></div>
-                    </div>
-
-                    <div class="boardWrap">
-                        <div id="board" class="board"></div>
-                        <div class="pot">POT: <span id="pot" class="chip">0</span></div>
-                    </div>
-                    <!-- 6 seats -->
-                    <div class="seat" data-seat="0">
-                        <div class="name" id="name0">—</div>
-                        <div class="cards" id="hand0"></div>
-                        <div class="stack" id="stack0">—</div>
-                        <div class="bet" id="bet0"></div>
-                    </div>
-                    <div class="seat" data-seat="1">
-                        <div class="name" id="name1">—</div>
-                        <div class="cards" id="hand1"></div>
-                        <div class="stack" id="stack1">—</div>
-                        <div class="bet" id="bet1"></div>
-                    </div>
-                    <div class="seat" data-seat="2">
-                        <div class="name" id="name2">—</div>
-                        <div class="cards" id="hand2"></div>
-                        <div class="stack" id="stack2">—</div>
-                        <div class="bet" id="bet2"></div>
-                    </div>
-                    <div class="seat" data-seat="3">
-                        <div class="name" id="name3">—</div>
-                        <div class="cards" id="hand3"></div>
-                        <div class="stack" id="stack3">—</div>
-                        <div class="bet" id="bet3"></div>
-                    </div>
-                    <div class="seat" data-seat="4">
-                        <div class="name" id="name4">—</div>
-                        <div class="cards" id="hand4"></div>
-                        <div class="stack" id="stack4">—</div>
-                        <div class="bet" id="bet4"></div>
-                    </div>
-                    <div class="seat" data-seat="5">
-                        <div class="name" id="name5">—</div>
-                        <div class="cards" id="hand5"></div>
-                        <div class="stack" id="stack5">—</div>
-                        <div class="bet" id="bet5"></div>
-                    </div>
-                </div>
-
-                <div class="controlBar">
+        <main>
+            <div class="wrap">
+                <!-- Lobby -->
+                <div id="lobby" class="card">
+                    <h2 style="margin:0 0 8px">ルーム作成 / 参加</h2>
                     <div class="row">
-                        <button id="newHand" disabled>New Hand（ホスト）</button>
-                        <button id="fold" disabled>Fold</button>
-                        <button id="checkCall" disabled>Check / Call</button>
-                        <button id="betRaise" disabled>Bet / Raise</button>
-                        <input type="number" id="betSize" min="100" step="100" value="600">
-                        <button id="show" disabled>Showdown（ホスト）</button>
-                        <button id="resetStacks" disabled style="margin-left:8px">Stacks Reset（ホスト）</button>
-                        <button id="leave" style="margin-left:auto">退室</button>
+                        <div>ルームID <input id="roomId" value="room123"></div>
+                        <div>名前 <input id="name" value="PlayerA"></div>
+                        <div>参加人数
+                            <select id="seatCount">
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                                <option>5</option>
+                                <option selected>6</option>
+                            </select>
+                        </div>
                     </div>
-                    <div id="status" class="status">—</div>
+                    <div class="row" style="margin-top:6px">
+                        <div>Buy-in <input type="number" id="buyIn" min="10000" max="50000" step="1000" value="20000">
+                        </div>
+                        <div>SB <input type="number" id="sb" min="50" max="5000" step="50" value="100"></div>
+                        <div>BB <input type="number" id="bb" min="100" max="10000" step="100" value="200"></div>
+                    </div>
+                    <div class="row" style="margin-top:8px">
+                        <button id="createRoom">作成して入室（ホスト）</button>
+                        <button id="joinRoom">入室のみ</button>
+                    </div>
+                    <div id="lobbyMsg" style="color:#ffb3b3;margin-top:8px"></div>
+                </div>
+
+                <!-- Table -->
+                <div id="gameArea" class="card" style="display:none">
+                    <h2 style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px">
+                        <span>ルーム <span id="roomLabel">-</span></span>
+                        <span id="roleLabel" style="font-size:12px;opacity:.9">—</span>
+                    </h2>
+
+                    <div id="table">
+                        <div id="turnArrow"></div>
+                        <div id="winnerBanner">
+                            <div class="title" id="wbTitle"></div>
+                            <div id="wbRole"></div>
+                            <div class="hand5" id="wbBest5"></div>
+                        </div>
+
+                        <div class="boardWrap">
+                            <div id="board" class="board"></div>
+                            <div class="pot">POT: <span id="pot" class="chip">0</span></div>
+                        </div>
+                        <!-- 6 seats -->
+                        <div class="seat" data-seat="0">
+                            <div class="name" id="name0">—</div>
+                            <div class="cards" id="hand0"></div>
+                            <div class="stack" id="stack0">—</div>
+                            <div class="bet" id="bet0"></div>
+                        </div>
+                        <div class="seat" data-seat="1">
+                            <div class="name" id="name1">—</div>
+                            <div class="cards" id="hand1"></div>
+                            <div class="stack" id="stack1">—</div>
+                            <div class="bet" id="bet1"></div>
+                        </div>
+                        <div class="seat" data-seat="2">
+                            <div class="name" id="name2">—</div>
+                            <div class="cards" id="hand2"></div>
+                            <div class="stack" id="stack2">—</div>
+                            <div class="bet" id="bet2"></div>
+                        </div>
+                        <div class="seat" data-seat="3">
+                            <div class="name" id="name3">—</div>
+                            <div class="cards" id="hand3"></div>
+                            <div class="stack" id="stack3">—</div>
+                            <div class="bet" id="bet3"></div>
+                        </div>
+                        <div class="seat" data-seat="4">
+                            <div class="name" id="name4">—</div>
+                            <div class="cards" id="hand4"></div>
+                            <div class="stack" id="stack4">—</div>
+                            <div class="bet" id="bet4"></div>
+                        </div>
+                        <div class="seat" data-seat="5">
+                            <div class="name" id="name5">—</div>
+                            <div class="cards" id="hand5"></div>
+                            <div class="stack" id="stack5">—</div>
+                            <div class="bet" id="bet5"></div>
+                        </div>
+                    </div>
+
+                    <div class="controlBar">
+                        <div class="row">
+                            <button id="newHand" disabled>New Hand（ホスト）</button>
+                            <button id="fold" disabled>Fold</button>
+                            <button id="checkCall" disabled>Check / Call</button>
+                            <button id="betRaise" disabled>Bet / Raise</button>
+                            <input type="number" id="betSize" min="100" step="100" value="600">
+                            <button id="show" disabled>Showdown（ホスト）</button>
+                            <button id="resetStacks" disabled style="margin-left:8px">Stacks Reset（ホスト）</button>
+                            <button id="leave" style="margin-left:auto">退室</button>
+                        </div>
+                        <div id="status" class="status">—</div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <script type="module">
-        /* ===== Firebase ===== */
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-        import {
-            getDatabase, ref, child, get, set, update, remove,
-            onValue, onChildAdded, runTransaction, onDisconnect, off
-        } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
-        import {
-            getAuth, setPersistence, browserSessionPersistence,
-            signInAnonymously, onAuthStateChanged, deleteUser, signOut
-        } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+        <script type="module">
+            /* ===== Firebase ===== */
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+            import {
+                getDatabase, ref, child, get, set, update, remove,
+                onValue, onChildAdded, runTransaction, onDisconnect, off
+            } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+            import {
+                getAuth, setPersistence, browserSessionPersistence,
+                signInAnonymously, onAuthStateChanged, deleteUser, signOut
+            } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-        /* === Firebase設定（差し替え） === */
-        const firebaseConfig = {
-            apiKey: "AIzaSyBdEbSb1QnOgap8hbh4w-LDS_tiCUhs2-s",
-            authDomain: "pokapoka-5fbe4.firebaseapp.com",
-            projectId: "pokapoka-5fbe4",
-            storageBucket: "pokapoka-5fbe4.firebasestorage.app",
-            messagingSenderId: "95009065510",
-            appId: "1:95009065510:web:f8ae7aeaaa905546aaf4e7",
-            measurementId: "G-N0KSJ6J66H"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
+            /* === Firebase設定（差し替え） === */
+            const firebaseConfig = {
+                apiKey: "AIzaSyBdEbSb1QnOgap8hbh4w-LDS_tiCUhs2-s",
+                authDomain: "pokapoka-5fbe4.firebaseapp.com",
+                projectId: "pokapoka-5fbe4",
+                storageBucket: "pokapoka-5fbe4.firebasestorage.app",
+                messagingSenderId: "95009065510",
+                appId: "1:95009065510:web:f8ae7aeaaa905546aaf4e7",
+                measurementId: "G-N0KSJ6J66H"
+            };
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+            const auth = getAuth(app);
 
-        /* タブ毎に別UID（同ブラウザ別タブOK） */
-        await setPersistence(auth, browserSessionPersistence);
-        await signInAnonymously(auth);
-        let uid = auth.currentUser?.uid || null;
-        onAuthStateChanged(auth, (u) => { if (u) { uid = u.uid; $('#hdrRight').text(`UID: ${uid.slice(0, 6)}…`); } });
+            /* タブ毎に別UID（同ブラウザ別タブOK） */
+            await setPersistence(auth, browserSessionPersistence);
+            await signInAnonymously(auth);
+            let uid = auth.currentUser?.uid || null;
+            onAuthStateChanged(auth, (u) => { if (u) { uid = u.uid; $('#hdrRight').text(`UID: ${uid.slice(0, 6)}…`); } });
 
-        /* ===== ルール構成値 ===== */
-        let SB = 100, BB = 200, BUYIN = 20000;  // ルームメタで決定
-        const POS_LABEL = ['Seat1', 'Seat2', 'Seat3', 'Seat4', 'Seat5', 'Seat6'];
-        const SUITS = ['♠', '♥', '♦', '♣'], RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
-        const RVAL = Object.fromEntries(RANKS.map((r, i) => [r, i + 2]));
-        const SNAME = { '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
+            /* ===== ルール構成値 ===== */
+            let SB = 100, BB = 200, BUYIN = 20000;  // ルームメタで決定
+            const POS_LABEL = ['Seat1', 'Seat2', 'Seat3', 'Seat4', 'Seat5', 'Seat6'];
+            const SUITS = ['♠', '♥', '♦', '♣'], RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+            const RVAL = Object.fromEntries(RANKS.map((r, i) => [r, i + 2]));
+            const SNAME = { '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
 
-        const mkDeck = () => { const d = []; for (const s of SUITS) for (const r of RANKS) d.push({ r, s, val: RVAL[r], code: `${r}${SNAME[s]}` }); return d; }
-        const shuf = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a; }
-        const red = s => (s === '♥' || s === '♦');
-        const ANG = [90, 150, 210, 270, 330, 30];
-        function geom() { const r = document.getElementById('table').getBoundingClientRect(); return { cx: r.width / 2, cy: r.height * 0.48, rx: r.width * 0.40, ry: r.height * 0.35 }; }
-        function pos(i) { const { cx, cy, rx, ry } = geom(); const a = ANG[i] * Math.PI / 180; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) }; }
-        function layoutSeats() { for (let i = 0; i < 6; i++) { const e = document.querySelector(`.seat[data-seat="${i}"]`); if (!e) continue; const p = pos(i); e.style.left = p.x + 'px'; e.style.top = p.y + 'px'; e.style.display = (i < seats) ? 'block' : 'none'; } }
-        window.addEventListener('resize', () => { layoutSeats(); moveTurnArrowToSeat(lastGame?.turn ?? -1); });
+            const mkDeck = () => { const d = []; for (const s of SUITS) for (const r of RANKS) d.push({ r, s, val: RVAL[r], code: `${r}${SNAME[s]}` }); return d; }
+            const shuf = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a; }
+            const red = s => (s === '♥' || s === '♦');
+            const ANG = [90, 150, 210, 270, 330, 30];
+            function geom() { const r = document.getElementById('table').getBoundingClientRect(); return { cx: r.width / 2, cy: r.height * 0.48, rx: r.width * 0.40, ry: r.height * 0.35 }; }
+            function pos(i) { const { cx, cy, rx, ry } = geom(); const a = ANG[i] * Math.PI / 180; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) }; }
+            function layoutSeats() { for (let i = 0; i < 6; i++) { const e = document.querySelector(`.seat[data-seat="${i}"]`); if (!e) continue; const p = pos(i); e.style.left = p.x + 'px'; e.style.top = p.y + 'px'; e.style.display = (i < seats) ? 'block' : 'none'; } }
+            window.addEventListener('resize', () => { layoutSeats(); moveTurnArrowToSeat(lastGame?.turn ?? -1); });
 
-        /* ===== DOM ===== */
-        const $status = $('#status'), $lobby = $('#lobby'), $game = $('#gameArea');
-        const $badgeSeats = $('#badgeSeats'), $badgeBTN = $('#badgeBTN'), $badgeBlinds = $('#badgeBlinds');
-        const $roomLabel = $('#roomLabel'), $roleLabel = $('#roleLabel');
+            /* ===== DOM ===== */
+            const $status = $('#status'), $lobby = $('#lobby'), $game = $('#gameArea');
+            const $badgeSeats = $('#badgeSeats'), $badgeBTN = $('#badgeBTN'), $badgeBlinds = $('#badgeBlinds');
+            const $roomLabel = $('#roomLabel'), $roleLabel = $('#roleLabel');
 
-        /* ===== Local State ===== */
-        let myName = "", roomId = "", isHost = false, seats = 6, mySeat = null, handId = null;
+            /* ===== Local State ===== */
+            let myName = "", roomId = "", isHost = false, seats = 6, mySeat = null, handId = null;
 
-        /* ===== 役名（日本語） ===== */
-        const HAND_NAME_JP = [
-            'ハイカード', 'ワンペア', 'ツーペア', 'スリーカード',
-            'ストレート', 'フラッシュ', 'フルハウス', 'フォーカード', 'ストレートフラッシュ'
-        ];
+            /* ===== 役名（日本語） ===== */
+            const HAND_NAME_JP = [
+                'ハイカード', 'ワンペア', 'ツーペア', 'スリーカード',
+                'ストレート', 'フラッシュ', 'フルハウス', 'フォーカード', 'ストレートフラッシュ'
+            ];
 
-        /* ===== レンダリング ===== */
-        function cardHTML(c) { const d = $('<div>').addClass('face').toggleClass('red', red(c.s)); d.text((c.r === 'T' ? '10' : c.r) + c.s); return d; }
-        function renderBoard(g) { const B = $('#board').empty(); (g.board || []).forEach(c => B.append(cardHTML(c))); $('#pot').text((g.pot || 0) + (g.streetBet || []).reduce((a, b) => a + b, 0)); }
-        function renderStacks(g) { for (let i = 0; i < seats; i++)$('#stack' + i).text(g.stacks?.[i] ?? '—'); }
-        function renderNames(bySeat) { for (let i = 0; i < 6; i++) { const nm = bySeat[i]?.name ?? '—'; $('#name' + i).text(nm + (i === mySeat ? ' (You)' : '')); } }
-        function renderHandsGeneral(holesObj, g) { for (let i = 0; i < seats; i++) { const H = $('#hand' + i).empty(); const h = holesObj[i]; if (!h) continue; const open = (g.stage === 'showdown' || i === mySeat); if (open) { h.forEach(c => H.append(cardHTML(c))); } } }
-        function renderHandsSeat(seatHole) { const H = $('#hand' + mySeat).empty(); (seatHole || []).forEach(c => H.append(cardHTML(c))); }
-        function turnHighlight(g) { $('.seat').removeClass('turn fold'); if (g.turn >= 0) $(`.seat[data-seat="${g.turn}"]`).addClass('turn'); for (let i = 0; i < seats; i++)if (g.inHand && g.inHand[i] === false) $(`.seat[data-seat="${i}"]`).addClass('fold'); }
+            /* ===== レンダリング ===== */
+            function cardHTML(c) { const d = $('<div>').addClass('face').toggleClass('red', red(c.s)); d.text((c.r === 'T' ? '10' : c.r) + c.s); return d; }
+            function renderBoard(g) { const B = $('#board').empty(); (g.board || []).forEach(c => B.append(cardHTML(c))); $('#pot').text((g.pot || 0) + (g.streetBet || []).reduce((a, b) => a + b, 0)); }
+            function renderStacks(g) { for (let i = 0; i < seats; i++)$('#stack' + i).text(g.stacks?.[i] ?? '—'); }
+            function renderNames(bySeat) { for (let i = 0; i < 6; i++) { const nm = bySeat[i]?.name ?? '—'; $('#name' + i).text(nm + (i === mySeat ? ' (You)' : '')); } }
+            function renderHandsGeneral(holesObj, g) { for (let i = 0; i < seats; i++) { const H = $('#hand' + i).empty(); const h = holesObj[i]; if (!h) continue; const open = (g.stage === 'showdown' || i === mySeat); if (open) { h.forEach(c => H.append(cardHTML(c))); } } }
+            function renderHandsSeat(seatHole) { const H = $('#hand' + mySeat).empty(); (seatHole || []).forEach(c => H.append(cardHTML(c))); }
+            function turnHighlight(g) { $('.seat').removeClass('turn fold'); if (g.turn >= 0) $(`.seat[data-seat="${g.turn}"]`).addClass('turn'); for (let i = 0; i < seats; i++)if (g.inHand && g.inHand[i] === false) $(`.seat[data-seat="${i}"]`).addClass('fold'); }
 
-        /* 小さなチップを並べる（1万/5千/千/五百/百） */
-        const DENOMS = [10000, 5000, 1000, 500, 100];
-        const CLASS_BY_DEN = { 100: 'chip-100', 500: 'chip-500', 1000: 'chip-1k', 5000: 'chip-5k', 10000: 'chip-10k' };
-        function renderBetChipsInto($el, amount) {
-            $el.empty();
-            if (!amount || amount <= 0) { return; }
-            let rest = amount;
-            for (const d of DENOMS) {
-                const n = Math.floor(rest / d);
-                for (let k = 0; k < n; k++) { $el.append($('<span>').addClass(`chipMini ${CLASS_BY_DEN[d]}`)); }
-                rest -= n * d;
+            /* 小さなチップを並べる（1万/5千/千/五百/百） */
+            const DENOMS = [10000, 5000, 1000, 500, 100];
+            const CLASS_BY_DEN = { 100: 'chip-100', 500: 'chip-500', 1000: 'chip-1k', 5000: 'chip-5k', 10000: 'chip-10k' };
+            function renderBetChipsInto($el, amount) {
+                $el.empty();
+                if (!amount || amount <= 0) { return; }
+                let rest = amount;
+                for (const d of DENOMS) {
+                    const n = Math.floor(rest / d);
+                    for (let k = 0; k < n; k++) { $el.append($('<span>').addClass(`chipMini ${CLASS_BY_DEN[d]}`)); }
+                    rest -= n * d;
+                }
+                $el.attr('title', `BET: ${amount}`);
             }
-            $el.attr('title', `BET: ${amount}`);
-        }
-        function renderStreetBets(g) {
-            for (let i = 0; i < seats; i++) {
-                const val = g?.streetBet?.[i] ?? 0;
-                renderBetChipsInto($('#bet' + i), val);
-            }
-        }
-
-        /* SB/BB バッジ（席名の横に常時） */
-        function applyBlindTags(g) {
-            $('.name .blindTag').remove();
-            if (!g) return;
-            if (typeof g.sbSeat === 'number') {
-                $(`#name${g.sbSeat}`).append($('<span>').addClass('blindTag').text('SB'));
-            }
-            if (typeof g.bbSeat === 'number') {
-                $(`#name${g.bbSeat}`).append($('<span>').addClass('blindTag').text('BB'));
-            }
-        }
-
-        function moveTurnArrowToSeat(seatIndex) {
-            const $arrow = $('#turnArrow');
-            if (seatIndex == null || seatIndex < 0) { $arrow.hide(); return; }
-            const e = document.querySelector(`.seat[data-seat="${seatIndex}"]`);
-            if (!e) { $arrow.hide(); return; }
-            const r = e.getBoundingClientRect();
-            const tbl = document.getElementById('table').getBoundingClientRect();
-            const left = (r.left - tbl.left) + r.width / 2;
-            const top = (r.top - tbl.top) - 10;
-            $arrow.css({ left: left + 'px', top: top + 'px' }).show();
-        }
-        function showWinnerBanner(winnerSeats, role, best5) {
-            const $b = $('#winnerBanner'); if (!$b.length) return;
-            $('#wbTitle').text(`勝者: ${winnerSeats.map(i => POS_LABEL[i]).join(', ')}`);
-            $('#wbRole').text(`役: ${role}`);
-            const box = $('#wbBest5').empty();
-            (best5 || []).forEach(c => box.append(cardHTML(c)));
-            $b.show();
-        }
-
-        /* ===== RTDB Paths ===== */
-        const R = () => ref(db, `rooms/${roomId}`);
-        const RM = () => ref(db, `rooms/${roomId}/meta`);
-        const RS = () => ref(db, `rooms/${roomId}/seats`);
-        const RP = () => ref(db, `rooms/${roomId}/players`);
-        const RMe = () => child(RP(), uid);
-        const RG = () => ref(db, `rooms/${roomId}/game`);
-        const RH = () => ref(db, `rooms/${roomId}/hole`);
-        const RD = () => ref(db, `rooms/${roomId}/deck/${handId}`);
-        const RA = () => ref(db, `rooms/${roomId}/actions/${handId}`);
-
-        /* ===== 席管理 ===== */
-        async function initSeatMap(count) { const payload = {}; for (let i = 0; i < count; i++)payload[String(i)] = ""; await set(RS(), payload); }
-        async function claimAnySeat(count) {
-            for (let i = 0; i < count; i++) {
-                const seatRef = child(RS(), String(i));
-                const res = await runTransaction(seatRef, curr => {
-                    if (curr === null || curr === "") { return uid; }
-                    if (curr === uid) { return uid; }
-                    return curr;
-                }, { applyLocally: false });
-                if (res.committed && res.snapshot.val() === uid) return i;
-            }
-            throw new Error('満席です');
-        }
-        async function releaseSeat(i) { const seatRef = child(RS(), String(i)); await runTransaction(seatRef, curr => (curr === uid ? "" : curr), { applyLocally: false }); }
-
-        /* ===== Join / Create ===== */
-        async function joinAs(host = false) {
-            if (!uid) throw new Error('auth未初期化');
-            if (host) {
-                BUYIN = Math.min(50000, Math.max(10000, Math.round((+$('#buyIn').val() || 20000) / 1000) * 1000));
-                SB = Math.max(1, +$('#sb').val() || 100);
-                BB = Math.max(SB * 2, +$('#bb').val() || 200);
-                await update(RM(), { host: uid, seats: seats, createdAt: Date.now(), buyin: BUYIN, sb: SB, bb: BB });
-                await initSeatMap(seats);
-            } else {
-                const m = (await get(RM())).val(); if (!m) throw new Error('このルームは未作成です（ホストが先に作成）');
-                seats = m.seats; BUYIN = m.buyin || 20000; SB = m.sb || 100; BB = m.bb || 200;
-                $('#buyIn').val(BUYIN); $('#sb').val(SB); $('#bb').val(BB);
+            function renderStreetBets(g) {
+                for (let i = 0; i < seats; i++) {
+                    const val = g?.streetBet?.[i] ?? 0;
+                    renderBetChipsInto($('#bet' + i), val);
+                }
             }
 
-            mySeat = await claimAnySeat(seats);
-            await set(RMe(), { uid, name: myName, seat: mySeat, stack: BUYIN, joinedAt: Date.now(), bot: false });
-            onDisconnect(RMe()).remove();
-            onDisconnect(child(RS(), String(mySeat))).set("");
-
-            onValue(RMe(), s => { const v = s.val(); if (v && typeof v.seat === 'number') { mySeat = v.seat; renderNames(lastPlayersBySeat); updateButtons(lastGame); subscribeHoles(); } });
-
-            isHost = host;
-            $lobby.hide(); $game.show(); layoutSeats();
-            $badgeSeats.text(`${seats} players`); $roomLabel.text(roomId);
-            $roleLabel.text(host ? 'あなたはホスト（進行役）です' : '参加者');
-            $('#newHand,#resetStacks').prop('disabled', !isHost);
-            $badgeBlinds.text(`SB/BB: ${SB} / ${BB}`);
-
-            startWatchers();
-            $status.text(host ? 'ホスト入室済み。開始可能です。' : '入室しました。ホストの開始を待機中…');
-        }
-
-        /* ===== Watchers ===== */
-        let lastPlayersBySeat = {}, lastGame = {};
-        let holeCb = null, holeRefCurrent = null;
-
-        function unsubscribeHole() { if (holeRefCurrent && holeCb) { off(holeRefCurrent, 'value', holeCb); } holeRefCurrent = null; holeCb = null; }
-        function subscribeHoles() {
-            unsubscribeHole();
-            if (!roomId) return;
-            if ((lastGame.stage || '') === 'showdown') {
-                holeRefCurrent = RH();
-                holeCb = onValue(holeRefCurrent, s => { renderHandsGeneral(s.val() || {}, lastGame); });
-            } else if (typeof mySeat === 'number') {
-                holeRefCurrent = child(RH(), String(mySeat));
-                holeCb = onValue(holeRefCurrent, s => { renderHandsSeat(s.val() || null); });
+            /* SB/BB バッジ（席名の横に常時） */
+            function applyBlindTags(g) {
+                $('.name .blindTag').remove();
+                if (!g) return;
+                if (typeof g.sbSeat === 'number') {
+                    $(`#name${g.sbSeat}`).append($('<span>').addClass('blindTag').text('SB'));
+                }
+                if (typeof g.bbSeat === 'number') {
+                    $(`#name${g.bbSeat}`).append($('<span>').addClass('blindTag').text('BB'));
+                }
             }
-        }
 
-        function startWatchers() {
-            onValue(RP(), snap => {
-                const players = snap.val() || {};
-                const bySeat = {}; Object.values(players).forEach(p => { if (typeof p.seat === 'number') bySeat[p.seat] = p; });
-                lastPlayersBySeat = bySeat; renderNames(bySeat);
-            });
+            function moveTurnArrowToSeat(seatIndex) {
+                const $arrow = $('#turnArrow');
+                if (seatIndex == null || seatIndex < 0) { $arrow.hide(); return; }
+                const e = document.querySelector(`.seat[data-seat="${seatIndex}"]`);
+                if (!e) { $arrow.hide(); return; }
+                const r = e.getBoundingClientRect();
+                const tbl = document.getElementById('table').getBoundingClientRect();
+                const left = (r.left - tbl.left) + r.width / 2;
+                const top = (r.top - tbl.top) - 10;
+                $arrow.css({ left: left + 'px', top: top + 'px' }).show();
+            }
+            function showWinnerBanner(winnerSeats, role, best5) {
+                const $b = $('#winnerBanner'); if (!$b.length) return;
+                $('#wbTitle').text(`勝者: ${winnerSeats.map(i => POS_LABEL[i]).join(', ')}`);
+                $('#wbRole').text(`役: ${role}`);
+                const box = $('#wbBest5').empty();
+                (best5 || []).forEach(c => box.append(cardHTML(c)));
+                $b.show();
+            }
 
-            onValue(RM(), async snap => {
-                const m = snap.val() || {}; const hostId = m.host;
-                if (m.buyin) { BUYIN = m.buyin; $('#buyIn').val(BUYIN); }
-                if (m.sb) { SB = m.sb; $('#sb').val(SB); }
-                if (m.bb) { BB = m.bb; $('#bb').val(BB); }
+            /* ===== RTDB Paths ===== */
+            const R = () => ref(db, `rooms/${roomId}`);
+            const RM = () => ref(db, `rooms/${roomId}/meta`);
+            const RS = () => ref(db, `rooms/${roomId}/seats`);
+            const RP = () => ref(db, `rooms/${roomId}/players`);
+            const RMe = () => child(RP(), uid);
+            const RG = () => ref(db, `rooms/${roomId}/game`);
+            const RH = () => ref(db, `rooms/${roomId}/hole`);
+            const RD = () => ref(db, `rooms/${roomId}/deck/${handId}`);
+            const RA = () => ref(db, `rooms/${roomId}/actions/${handId}`);
+
+            /* ===== 席管理 ===== */
+            async function initSeatMap(count) { const payload = {}; for (let i = 0; i < count; i++)payload[String(i)] = ""; await set(RS(), payload); }
+            async function claimAnySeat(count) {
+                for (let i = 0; i < count; i++) {
+                    const seatRef = child(RS(), String(i));
+                    const res = await runTransaction(seatRef, curr => {
+                        if (curr === null || curr === "") { return uid; }
+                        if (curr === uid) { return uid; }
+                        return curr;
+                    }, { applyLocally: false });
+                    if (res.committed && res.snapshot.val() === uid) return i;
+                }
+                throw new Error('満席です');
+            }
+            async function releaseSeat(i) { const seatRef = child(RS(), String(i)); await runTransaction(seatRef, curr => (curr === uid ? "" : curr), { applyLocally: false }); }
+
+            /* ===== Join / Create ===== */
+            async function joinAs(host = false) {
+                if (!uid) throw new Error('auth未初期化');
+                if (host) {
+                    BUYIN = Math.min(50000, Math.max(10000, Math.round((+$('#buyIn').val() || 20000) / 1000) * 1000));
+                    SB = Math.max(1, +$('#sb').val() || 100);
+                    BB = Math.max(SB * 2, +$('#bb').val() || 200);
+                    await update(RM(), { host: uid, seats: seats, createdAt: Date.now(), buyin: BUYIN, sb: SB, bb: BB });
+                    await initSeatMap(seats);
+                } else {
+                    const m = (await get(RM())).val(); if (!m) throw new Error('このルームは未作成です（ホストが先に作成）');
+                    seats = m.seats; BUYIN = m.buyin || 20000; SB = m.sb || 100; BB = m.bb || 200;
+                    $('#buyIn').val(BUYIN); $('#sb').val(SB); $('#bb').val(BB);
+                }
+
+                mySeat = await claimAnySeat(seats);
+                await set(RMe(), { uid, name: myName, seat: mySeat, stack: BUYIN, joinedAt: Date.now(), bot: false });
+                onDisconnect(RMe()).remove();
+                onDisconnect(child(RS(), String(mySeat))).set("");
+
+                onValue(RMe(), s => { const v = s.val(); if (v && typeof v.seat === 'number') { mySeat = v.seat; renderNames(lastPlayersBySeat); updateButtons(lastGame); subscribeHoles(); } });
+
+                isHost = host;
+                $lobby.hide(); $game.show(); layoutSeats();
+                $badgeSeats.text(`${seats} players`); $roomLabel.text(roomId);
+                $roleLabel.text(host ? 'あなたはホスト（進行役）です' : '参加者');
+                $('#newHand,#resetStacks').prop('disabled', !isHost);
                 $badgeBlinds.text(`SB/BB: ${SB} / ${BB}`);
 
-                const players = (await get(RP())).val() || {};
-                const hostPresent = !!players[hostId];
-                $status.text(hostPresent ? (isHost ? 'ホスト入室済み。開始可能です。' : 'ホスト入室済み。開始を待っています。')
-                    : (isHost ? 'あなたはホストです。' : 'ホストの接続を待っています…'));
-            });
+                startWatchers();
+                $status.text(host ? 'ホスト入室済み。開始可能です。' : '入室しました。ホストの開始を待機中…');
+            }
 
-            onValue(RG(), snap => {
-                const g = snap.val() || {}; lastGame = g; if (g.handId) handId = g.handId;
-                renderBoard(g); renderStacks(g); renderStreetBets(g); turnHighlight(g);
-                applyBlindTags(g);
-                moveTurnArrowToSeat(g.turn);
-                $badgeBTN.text('BTN: ' + (g.btn != null && g.btn >= 0 ? POS_LABEL[g.btn] : '-'));
-                if (g.statusText) $status.text(g.statusText);
-                updateButtons(g);
-                subscribeHoles();
-                if (isHost && g.handId) { switchActionFeed(g.handId); }
+            /* ===== Watchers ===== */
+            let lastPlayersBySeat = {}, lastGame = {};
+            let holeCb = null, holeRefCurrent = null;
 
-                if (g.stage === 'showdown' && g.winner && g.winner.seats) {
-                    (async () => {
-                        const holes = (await get(RH())).val() || {};
-                        const first = g.winner.seats[0];
-                        const sc = evaluate7([...(holes[first] || []), ...(g.board || [])]);
-                        showWinnerBanner(g.winner.seats, g.winner.role || '—', sc.best5 || []);
-                    })();
-                } else {
-                    $('#winnerBanner').hide();
+            function unsubscribeHole() { if (holeRefCurrent && holeCb) { off(holeRefCurrent, 'value', holeCb); } holeRefCurrent = null; holeCb = null; }
+            function subscribeHoles() {
+                unsubscribeHole();
+                if (!roomId) return;
+                if ((lastGame.stage || '') === 'showdown') {
+                    holeRefCurrent = RH();
+                    holeCb = onValue(holeRefCurrent, s => { renderHandsGeneral(s.val() || {}, lastGame); });
+                } else if (typeof mySeat === 'number') {
+                    holeRefCurrent = child(RH(), String(mySeat));
+                    holeCb = onValue(holeRefCurrent, s => { renderHandsSeat(s.val() || null); });
                 }
-            });
-        }
-
-        /* ===== Buttons ===== */
-        function toCallOf(g, seat) { return Math.max(0, (g.currentBet || 0) - (g.streetBet?.[seat] || 0)); }
-        function updateButtons(g) {
-            const hasSeat = (typeof mySeat === 'number');
-            const myTurn = hasSeat && g && (g.turn === mySeat) && (['preflop', 'flop', 'turn', 'river'].includes(g.stage)) && (g.inHand?.[mySeat]) && !(g.allin?.[mySeat]);
-            $('#fold').prop('disabled', !myTurn);
-            $('#checkCall').prop('disabled', !myTurn);
-            $('#betRaise').prop('disabled', !myTurn);
-            $('#show').prop('disabled', !(isHost && g && (g.stage === 'river' || g.stage === 'showdown')));
-            if (!myTurn) return;
-
-            const call = toCallOf(g, mySeat);
-            $('#checkCall').text(call === 0 ? 'Check' : `Call (${call})`);
-            $('#betRaise').text((g.currentBet || 0) === 0 ? 'Bet' : 'Raise');
-
-            const side = (g.pot || 0) + (g.streetBet || []).reduce((a, b) => a + b, 0) + call;
-            const sug = call === 0 ? Math.max(BB, Math.round(((g.stage === 'preflop' ? BB * 2.5 : side * 0.4)) / 100) * 100)
-                : Math.round(((g.currentBet + Math.max(g.lastRaise || BB, BB)) - (g.streetBet?.[mySeat] || 0)) / 100) * 100;
-            $('#betSize').val(sug);
-        }
-
-        /* ===== Host: New Hand / Next street ===== */
-        function nextAlive(from, inHand, seatsN) { let t = from; for (let k = 0; k < seatsN + 2; k++) { t = (t + 1) % seatsN; if (inHand[t]) return t; } return -1; }
-
-        async function hostNewHand() {
-            $('#winnerBanner').hide();
-            const players = (await get(RP())).val() || {};
-            const aliveSeats = Object.values(players).map(p => p.seat).filter(i => typeof i === 'number' && i < seats).sort((a, b) => a - b);
-            if (aliveSeats.length < 2) { $status.text('開始には2人以上必要です'); return; }
-
-            handId = 'h-' + Date.now();
-            const deck = shuf(mkDeck());
-            await set(ref(db, `rooms/${roomId}/deck/${handId}`), { cards: deck, idx: 0 });
-
-            const prev = (await get(RG())).val();
-            const stacks = Array.from({ length: seats }, (_, i) => prev?.stacks?.[i] ?? BUYIN);
-            const inHand = Array(seats).fill(false);
-            const allin = Array(seats).fill(false);
-            const streetBet = Array(seats).fill(0);
-            const paid = Array(seats).fill(0);           // ← 個別拠出累計（サイドポット用）
-            aliveSeats.forEach(i => inHand[i] = true);
-
-            const prevBtn = (prev?.btn ?? -1);
-            let btn = aliveSeats[0];
-            if (prevBtn >= 0 && aliveSeats.includes(prevBtn)) { const pi = aliveSeats.indexOf(prevBtn); btn = aliveSeats[(pi + 1) % aliveSeats.length]; }
-
-            const sbSeat = nextAlive(btn, inHand, seats), bbSeat = nextAlive(sbSeat, inHand, seats);
-            // SB/BB をポスト
-            stacks[sbSeat] -= SB; streetBet[sbSeat] += SB; paid[sbSeat] += SB;
-            stacks[bbSeat] -= BB; streetBet[bbSeat] += BB; paid[bbSeat] += BB;
-
-            const turn = nextAlive(bbSeat, inHand, seats);   // UTG
-
-            await update(RG(), {
-                handId, stage: 'preflop', btn, turn,
-                sbSeat, bbSeat,
-                currentBet: BB, lastRaise: BB, lastAggressor: bbSeat,
-                pot: 0, streetBet, stacks, inHand, allin, board: [],
-                paid, acted: Array(seats).fill(false), starter: turn, resolved: false,
-                statusText: `New Hand: BTN=${POS_LABEL[btn]} / SB=${POS_LABEL[sbSeat]} / BB=${POS_LABEL[bbSeat]}`
-            });
-
-            const drawN = async (n) => { const dk = (await get(ref(db, `rooms/${roomId}/deck/${handId}`))).val(); const arr = dk.cards; let i = dk.idx; const out = []; for (let k = 0; k < n; k++)out.push(arr[i++]); await update(ref(db, `rooms/${roomId}/deck/${handId}`), { idx: i }); return out; };
-            const holes = {}; for (const s of aliveSeats) { holes[s] = await drawN(2); }
-            await set(RH(), holes);
-            // ※ streetBet をここでリセットしない
-        }
-
-        async function hostOpenNextStreet(g) {
-            const dk = (await get(ref(db, `rooms/${roomId}/deck/${handId}`))).val(); let arr = dk.cards, i = dk.idx;
-            const board = g.board || [];
-            if (g.stage === 'preflop') { i++; board.push(arr[i++], arr[i++], arr[i++]); }
-            else if (g.stage === 'flop') { i++; board.push(arr[i++]); }
-            else if (g.stage === 'turn') { i++; board.push(arr[i++]); }
-            await update(ref(db, `rooms/${roomId}/deck/${handId}`), { idx: i });
-
-            let pot = g.pot || 0;
-            const streetBet = [...(g.streetBet || [])];
-            for (let s = 0; s < seats; s++) { pot += streetBet[s]; streetBet[s] = 0; } // ストリート確定でポットに繰り入れ
-
-            const inHand = [...(g.inHand || [])];
-            const next = nextAlive(g.btn, inHand, seats);
-            const nextStage = g.stage === 'preflop' ? 'flop' : (g.stage === 'flop' ? 'turn' : 'river');
-            await update(RG(), {
-                stage: nextStage, turn: next, currentBet: 0, lastRaise: BB, lastAggressor: -1,
-                acted: Array(seats).fill(false), pot, streetBet, board,
-                // sbSeat / bbSeat は維持
-                statusText: `${nextStage.toUpperCase()}：先行 ${next >= 0 ? POS_LABEL[next] : '—'}`
-            });
-        }
-
-        /* ===== Actions & inbox ===== */
-        async function sendAction(kind, amount = 0) {
-            if (!handId || typeof mySeat !== 'number') return;
-            const key = Date.now() + '_' + Math.random().toString(36).slice(2);
-            await set(child(RA(), key), { by: uid, seat: mySeat, action: kind, amount: +amount || 0, ts: Date.now() });
-        }
-        let actionUnsub = null, currentFeedId = null;
-        function switchActionFeed(hid) {
-            if (currentFeedId === hid) return;
-            if (actionUnsub) { actionUnsub(); actionUnsub = null; }
-            const feed = ref(db, `rooms/${roomId}/actions/${hid}`);
-            const cb = onChildAdded(feed, async s => {
-                const v = s.val(); if (!isHost || !v || v.done) return;
-                await handleActionAsHost(v);
-                await update(child(feed, s.key), { done: true });
-            });
-            actionUnsub = () => off(feed, 'child_added', cb);
-            currentFeedId = hid;
-        }
-
-        /* ===== サイドポット分配（paid[]ベース） ===== */
-        function everyoneSettled(g) {
-            const elig = []; for (let i = 0; i < seats; i++) if (g.inHand[i] && !g.allin[i]) elig.push(i);
-            if (elig.length === 0) return true;
-            if ((g.currentBet || 0) === 0) { for (const i of elig) if (!(g.acted?.[i])) return false; return true; }
-            else { for (const i of elig) if ((g.streetBet?.[i] || 0) !== (g.currentBet || 0)) return false; return true; }
-        }
-        function onlyOneAlive(inHand) { let last = -1, cnt = 0; for (let i = 0; i < seats; i++)if (inHand[i]) { cnt++; last = i; } return { cnt, last }; }
-
-        function buildSidePots(paid, inHand) {
-            const caps = [...new Set(paid.filter(v => v > 0))].sort((a, b) => a - b);
-            const pots = [];
-            let prev = 0;
-            for (const cap of caps) {
-                const layer = cap - prev;
-                if (layer <= 0) { prev = cap; continue; }
-                const count = paid.filter(v => v >= cap).length;
-                const amount = layer * count;
-                const elig = [];
-                for (let i = 0; i < seats; i++) { if (inHand[i] && paid[i] >= cap) elig.push(i); }
-                pots.push({ amount, elig });
-                prev = cap;
             }
-            return pots;
-        }
-        function distributePots(pots, scores, stacks) {
-            const scoreMap = new Map(scores.map(o => [o.i, o.sc]));
-            const key = sc => sc.rank + '|' + (sc.kickers || []).join(',');
-            for (const p of pots) {
-                const contenders = p.elig.filter(i => scoreMap.has(i));
-                if (contenders.length === 0 || p.amount <= 0) continue;
-                let bestSc = scoreMap.get(contenders[0]);
-                for (let i = 1; i < contenders.length; i++) {
-                    const s = scoreMap.get(contenders[i]);
-                    if (compareScore(s, bestSc) > 0) bestSc = s;
-                }
-                const winners = contenders.filter(i => key(scoreMap.get(i)) === key(bestSc));
-                const share = Math.floor(p.amount / winners.length);
-                let rem = p.amount - share * winners.length;
-                for (const w of winners) stacks[w] += share;
-                for (let k = 0; k < rem; k++) stacks[winners[k % winners.length]] += 1;
-            }
-        }
 
-        /* ===== 役判定 ===== */
-        function evaluate7(cards) {
-            let best = null; const n = cards.length;
-            for (let a = 0; a < n - 4; a++)
-                for (let b = a + 1; b < n - 3; b++)
-                    for (let c = b + 1; c < n - 2; c++)
-                        for (let d = c + 1; d < n - 1; d++)
-                            for (let e = d + 1; e < n; e++) {
-                                const five = [cards[a], cards[b], cards[c], cards[d], cards[e]];
-                                const sc = evaluate5(five);
-                                if (!best || compareScore(sc, best) > 0) best = sc;
-                            }
-            return best; // {rank,kickers,best5:[...5cards]}
-        }
-        function evaluate5(cards) {
-            const vals = cards.map(c => c.val).sort((a, b) => b - a), suits = cards.map(c => c.s);
-            const counts = {}; for (const v of vals) counts[v] = (counts[v] || 0) + 1;
-            const groups = Object.entries(counts).map(([v, c]) => ({ v: +v, c }))
-                .sort((a, b) => (b.c - a.c) || (b.v - a.v));
-            const isFlush = suits.every(s => s === suits[0]); const uniq = [...new Set(vals)];
-            let isStraight = false, top = 0;
-            if (uniq.length >= 5) {
-                for (let i = 0; i <= uniq.length - 5; i++) {
-                    if (uniq[i] - 1 === uniq[i + 1] && uniq[i + 1] - 1 === uniq[i + 2] && uniq[i + 2] - 1 === uniq[i + 3] && uniq[i + 3] - 1 === uniq[i + 4]) { isStraight = true; top = uniq[i]; break; }
-                }
-                const wheel = [14, 5, 4, 3, 2]; if (!isStraight && wheel.every(v => uniq.includes(v))) { isStraight = true; top = 5; }
-            }
-            let rank, kickers;
-            if (isFlush && isStraight) { rank = 8; kickers = [top]; }
-            else if (groups[0].c === 4) { rank = 7; const kick = vals.find(v => v !== groups[0].v); kickers = [groups[0].v, kick]; }
-            else if (groups[0].c === 3 && groups[1]?.c >= 2) { rank = 6; kickers = [groups[0].v, groups[1].v]; }
-            else if (isFlush) { rank = 5; kickers = vals; }
-            else if (isStraight) { rank = 4; kickers = [top]; }
-            else if (groups[0].c === 3) { rank = 3; const ks = vals.filter(v => v !== groups[0].v).slice(0, 2); kickers = [groups[0].v, ...ks]; }
-            else if (groups[0].c === 2 && groups[1]?.c === 2) {
-                const rest = vals.find(v => v !== groups[0].v && v !== groups[1].v);
-                const hi = Math.max(groups[0].v, groups[1].v), lo = Math.min(groups[0].v, groups[1].v);
-                rank = 2; kickers = [hi, lo, rest];
-            } else if (groups[0].c === 2) {
-                const ks = vals.filter(v => v !== groups[0].v).slice(0, 3); rank = 1; kickers = [groups[0].v, ...ks];
-            } else { rank = 0; kickers = vals; }
-            return { rank, kickers, best5: cards };
-        }
-        function compareScore(a, b) {
-            if (a.rank !== b.rank) return a.rank - b.rank;
-            for (let i = 0; i < Math.max(a.kickers.length, b.kickers.length); i++) {
-                const av = a.kickers[i] || 0, bv = b.kickers[i] || 0;
-                if (av !== bv) return av - bv;
-            }
-            return 0;
-        }
+            function startWatchers() {
+                onValue(RP(), snap => {
+                    const players = snap.val() || {};
+                    const bySeat = {}; Object.values(players).forEach(p => { if (typeof p.seat === 'number') bySeat[p.seat] = p; });
+                    lastPlayersBySeat = bySeat; renderNames(bySeat);
+                });
 
-        /* ===== アクション処理（ホスト） ===== */
-        async function handleActionAsHost(ev) {
-            const gs = (await get(RG())).val(); if (!gs) return;
-            if (ev.seat !== gs.turn) return;
+                onValue(RM(), async snap => {
+                    const m = snap.val() || {}; const hostId = m.host;
+                    if (m.buyin) { BUYIN = m.buyin; $('#buyIn').val(BUYIN); }
+                    if (m.sb) { SB = m.sb; $('#sb').val(SB); }
+                    if (m.bb) { BB = m.bb; $('#bb').val(BB); }
+                    $badgeBlinds.text(`SB/BB: ${SB} / ${BB}`);
 
-            let stage = gs.stage, turn = gs.turn, currentBet = gs.currentBet || 0, lastRaise = gs.lastRaise || BB, lastAggressor = gs.lastAggressor ?? -1;
-            const stacks = [...(gs.stacks || [])], inHand = [...(gs.inHand || [])], allin = [...(gs.allin || [])], streetBet = [...(gs.streetBet || [])], acted = [...(gs.acted || Array(seats).fill(false))];
-            const board = [...(gs.board || [])]; let pot = gs.pot || 0; const paid = [...(gs.paid || Array(seats).fill(0))];
+                    const players = (await get(RP())).val() || {};
+                    const hostPresent = !!players[hostId];
+                    $status.text(hostPresent ? (isHost ? 'ホスト入室済み。開始可能です。' : 'ホスト入室済み。開始を待っています。')
+                        : (isHost ? 'あなたはホストです。' : 'ホストの接続を待っています…'));
+                });
 
-            const pay = (seat, amt) => { const give = Math.max(0, Math.min(amt, stacks[seat])); stacks[seat] -= give; streetBet[seat] += give; paid[seat] += give; if (stacks[seat] === 0) allin[seat] = true; return give; };
-            const toCall = Math.max(0, currentBet - (streetBet[turn] || 0));
+                onValue(RG(), snap => {
+                    const g = snap.val() || {}; lastGame = g; if (g.handId) handId = g.handId;
+                    renderBoard(g); renderStacks(g); renderStreetBets(g); turnHighlight(g);
+                    applyBlindTags(g);
+                    moveTurnArrowToSeat(g.turn);
+                    $badgeBTN.text('BTN: ' + (g.btn != null && g.btn >= 0 ? POS_LABEL[g.btn] : '-'));
+                    if (g.statusText) $status.text(g.statusText);
+                    updateButtons(g);
+                    subscribeHoles();
+                    if (isHost && g.handId) { switchActionFeed(g.handId); }
 
-            if (ev.action === 'fold') {
-                inHand[turn] = false; allin[turn] = false; acted[turn] = true;
-            } else if (ev.action === 'checkcall') {
-                if (toCall > 0) { pay(turn, toCall); acted[turn] = true; } else { acted[turn] = true; }
-            } else if (ev.action === 'betraise') {
-                // 入力は「レイズ後の合計額（raise-to）」として扱う
-                let raiseTo = Math.round((+ev.amount || 0) / 100) * 100;
-                const myPut = (streetBet[turn] || 0);
-                let target, need;
-
-                if (currentBet === 0) {
-                    // そのストリート初回ベット（フロップ以降など）
-                    // 最低ベットは BB 相当（ゲーム設定によっては他ルールもあるが簡易に BB）
-                    const minFirstBet = Math.max(BB, 0);
-                    target = Math.max(minFirstBet, raiseTo);  // 「ベット後の自分の合計拠出額」
-                    need = target - myPut;                  // 追加で出す差額のみ
-                    if (need > 0) {
-                        pay(turn, need);
-                        // 初回ベットは new currentBet
-                        currentBet = streetBet[turn];
-                        lastRaise = currentBet;              // 次回の最小レイズ幅
-                        lastAggressor = turn;
-                        for (let i = 0; i < seats; i++) acted[i] = (i === turn);
+                    if (g.stage === 'showdown' && g.winner && g.winner.seats) {
+                        (async () => {
+                            const holes = (await get(RH())).val() || {};
+                            const first = g.winner.seats[0];
+                            const sc = evaluate7([...(holes[first] || []), ...(g.board || [])]);
+                            showWinnerBanner(g.winner.seats, g.winner.role || '—', sc.best5 || []);
+                        })();
                     } else {
-                        // 追加ゼロならチェック扱い
-                        acted[turn] = true;
+                        $('#winnerBanner').hide();
                     }
+                });
+            }
 
-                } else {
-                    // 既にベットがある：raise-to は「currentBet + lastRaise」以上
-                    const minRaiseTo = currentBet + lastRaise;
-                    target = Math.max(minRaiseTo, raiseTo);
-                    need = target - myPut;
+            /* ===== Buttons ===== */
+            function toCallOf(g, seat) { return Math.max(0, (g.currentBet || 0) - (g.streetBet?.[seat] || 0)); }
+            function updateButtons(g) {
+                const hasSeat = (typeof mySeat === 'number');
+                const myTurn = hasSeat && g && (g.turn === mySeat) && (['preflop', 'flop', 'turn', 'river'].includes(g.stage)) && (g.inHand?.[mySeat]) && !(g.allin?.[mySeat]);
+                $('#fold').prop('disabled', !myTurn);
+                $('#checkCall').prop('disabled', !myTurn);
+                $('#betRaise').prop('disabled', !myTurn);
+                $('#show').prop('disabled', !(isHost && g && (g.stage === 'river' || g.stage === 'showdown')));
+                if (!myTurn) return;
 
-                    if (need > 0) {
-                        const before = streetBet[turn];
-                        pay(turn, need);
-                        const after = streetBet[turn];
-                        const effective = after - currentBet;   // 実質どれだけ current を上回ったか
+                const call = toCallOf(g, mySeat);
+                $('#checkCall').text(call === 0 ? 'Check' : `Call (${call})`);
+                $('#betRaise').text((g.currentBet || 0) === 0 ? 'Bet' : 'Raise');
 
-                        if (effective > 0) {
-                            // ちゃんと上回った
-                            currentBet = after;
+                const side = (g.pot || 0) + (g.streetBet || []).reduce((a, b) => a + b, 0) + call;
+                const sug = call === 0 ? Math.max(BB, Math.round(((g.stage === 'preflop' ? BB * 2.5 : side * 0.4)) / 100) * 100)
+                    : Math.round(((g.currentBet + Math.max(g.lastRaise || BB, BB)) - (g.streetBet?.[mySeat] || 0)) / 100) * 100;
+                $('#betSize').val(sug);
+            }
 
-                            if (effective >= lastRaise) {
-                                // フルレイズ → アクション再オープン
-                                lastRaise = effective;
-                                lastAggressor = turn;
-                                for (let i = 0; i < seats; i++) acted[i] = (i === turn);
+            /* ===== Host: New Hand / Next street ===== */
+            function nextAlive(from, inHand, seatsN) { let t = from; for (let k = 0; k < seatsN + 2; k++) { t = (t + 1) % seatsN; if (inHand[t]) return t; } return -1; }
+
+            async function hostNewHand() {
+                $('#winnerBanner').hide();
+                const players = (await get(RP())).val() || {};
+                const aliveSeats = Object.values(players).map(p => p.seat).filter(i => typeof i === 'number' && i < seats).sort((a, b) => a - b);
+                if (aliveSeats.length < 2) { $status.text('開始には2人以上必要です'); return; }
+
+                handId = 'h-' + Date.now();
+                const deck = shuf(mkDeck());
+                await set(ref(db, `rooms/${roomId}/deck/${handId}`), { cards: deck, idx: 0 });
+
+                const prev = (await get(RG())).val();
+                const stacks = Array.from({ length: seats }, (_, i) => prev?.stacks?.[i] ?? BUYIN);
+                const inHand = Array(seats).fill(false);
+                const allin = Array(seats).fill(false);
+                const streetBet = Array(seats).fill(0);
+                const paid = Array(seats).fill(0);           // ← 個別拠出累計（サイドポット用）
+                aliveSeats.forEach(i => inHand[i] = true);
+
+                const prevBtn = (prev?.btn ?? -1);
+                let btn = aliveSeats[0];
+                if (prevBtn >= 0 && aliveSeats.includes(prevBtn)) { const pi = aliveSeats.indexOf(prevBtn); btn = aliveSeats[(pi + 1) % aliveSeats.length]; }
+
+                const sbSeat = nextAlive(btn, inHand, seats), bbSeat = nextAlive(sbSeat, inHand, seats);
+                // SB/BB をポスト
+                stacks[sbSeat] -= SB; streetBet[sbSeat] += SB; paid[sbSeat] += SB;
+                stacks[bbSeat] -= BB; streetBet[bbSeat] += BB; paid[bbSeat] += BB;
+
+                const turn = nextAlive(bbSeat, inHand, seats);   // UTG
+
+                await update(RG(), {
+                    handId, stage: 'preflop', btn, turn,
+                    sbSeat, bbSeat,
+                    currentBet: BB, lastRaise: BB, lastAggressor: bbSeat,
+                    pot: 0, streetBet, stacks, inHand, allin, board: [],
+                    paid, acted: Array(seats).fill(false), starter: turn, resolved: false,
+                    statusText: `New Hand: BTN=${POS_LABEL[btn]} / SB=${POS_LABEL[sbSeat]} / BB=${POS_LABEL[bbSeat]}`
+                });
+
+                const drawN = async (n) => { const dk = (await get(ref(db, `rooms/${roomId}/deck/${handId}`))).val(); const arr = dk.cards; let i = dk.idx; const out = []; for (let k = 0; k < n; k++)out.push(arr[i++]); await update(ref(db, `rooms/${roomId}/deck/${handId}`), { idx: i }); return out; };
+                const holes = {}; for (const s of aliveSeats) { holes[s] = await drawN(2); }
+                await set(RH(), holes);
+                // ※ streetBet をここでリセットしない
+            }
+
+            async function hostOpenNextStreet(g) {
+                const dk = (await get(ref(db, `rooms/${roomId}/deck/${handId}`))).val(); let arr = dk.cards, i = dk.idx;
+                const board = g.board || [];
+                if (g.stage === 'preflop') { i++; board.push(arr[i++], arr[i++], arr[i++]); }
+                else if (g.stage === 'flop') { i++; board.push(arr[i++]); }
+                else if (g.stage === 'turn') { i++; board.push(arr[i++]); }
+                await update(ref(db, `rooms/${roomId}/deck/${handId}`), { idx: i });
+
+                let pot = g.pot || 0;
+                const streetBet = [...(g.streetBet || [])];
+                for (let s = 0; s < seats; s++) { pot += streetBet[s]; streetBet[s] = 0; } // ストリート確定でポットに繰り入れ
+
+                const inHand = [...(g.inHand || [])];
+                const next = nextAlive(g.btn, inHand, seats);
+                const nextStage = g.stage === 'preflop' ? 'flop' : (g.stage === 'flop' ? 'turn' : 'river');
+                await update(RG(), {
+                    stage: nextStage, turn: next, currentBet: 0, lastRaise: BB, lastAggressor: -1,
+                    acted: Array(seats).fill(false), pot, streetBet, board,
+                    // sbSeat / bbSeat は維持
+                    statusText: `${nextStage.toUpperCase()}：先行 ${next >= 0 ? POS_LABEL[next] : '—'}`
+                });
+            }
+
+            /* ===== Actions & inbox ===== */
+            async function sendAction(kind, amount = 0) {
+                if (!handId || typeof mySeat !== 'number') return;
+                const key = Date.now() + '_' + Math.random().toString(36).slice(2);
+                await set(child(RA(), key), { by: uid, seat: mySeat, action: kind, amount: +amount || 0, ts: Date.now() });
+            }
+            let actionUnsub = null, currentFeedId = null;
+            function switchActionFeed(hid) {
+                if (currentFeedId === hid) return;
+                if (actionUnsub) { actionUnsub(); actionUnsub = null; }
+                const feed = ref(db, `rooms/${roomId}/actions/${hid}`);
+                const cb = onChildAdded(feed, async s => {
+                    const v = s.val(); if (!isHost || !v || v.done) return;
+                    await handleActionAsHost(v);
+                    await update(child(feed, s.key), { done: true });
+                });
+                actionUnsub = () => off(feed, 'child_added', cb);
+                currentFeedId = hid;
+            }
+
+            /* ===== サイドポット分配（paid[]ベース） ===== */
+            function everyoneSettled(g) {
+                const elig = []; for (let i = 0; i < seats; i++) if (g.inHand[i] && !g.allin[i]) elig.push(i);
+                if (elig.length === 0) return true;
+                if ((g.currentBet || 0) === 0) { for (const i of elig) if (!(g.acted?.[i])) return false; return true; }
+                else { for (const i of elig) if ((g.streetBet?.[i] || 0) !== (g.currentBet || 0)) return false; return true; }
+            }
+            function onlyOneAlive(inHand) { let last = -1, cnt = 0; for (let i = 0; i < seats; i++)if (inHand[i]) { cnt++; last = i; } return { cnt, last }; }
+
+            function buildSidePots(paid, inHand) {
+                const caps = [...new Set(paid.filter(v => v > 0))].sort((a, b) => a - b);
+                const pots = [];
+                let prev = 0;
+                for (const cap of caps) {
+                    const layer = cap - prev;
+                    if (layer <= 0) { prev = cap; continue; }
+                    const count = paid.filter(v => v >= cap).length;
+                    const amount = layer * count;
+                    const elig = [];
+                    for (let i = 0; i < seats; i++) { if (inHand[i] && paid[i] >= cap) elig.push(i); }
+                    pots.push({ amount, elig });
+                    prev = cap;
+                }
+                return pots;
+            }
+            function distributePots(pots, scores, stacks) {
+                const scoreMap = new Map(scores.map(o => [o.i, o.sc]));
+                const key = sc => sc.rank + '|' + (sc.kickers || []).join(',');
+                for (const p of pots) {
+                    const contenders = p.elig.filter(i => scoreMap.has(i));
+                    if (contenders.length === 0 || p.amount <= 0) continue;
+                    let bestSc = scoreMap.get(contenders[0]);
+                    for (let i = 1; i < contenders.length; i++) {
+                        const s = scoreMap.get(contenders[i]);
+                        if (compareScore(s, bestSc) > 0) bestSc = s;
+                    }
+                    const winners = contenders.filter(i => key(scoreMap.get(i)) === key(bestSc));
+                    const share = Math.floor(p.amount / winners.length);
+                    let rem = p.amount - share * winners.length;
+                    for (const w of winners) stacks[w] += share;
+                    for (let k = 0; k < rem; k++) stacks[winners[k % winners.length]] += 1;
+                }
+            }
+
+            /* ===== 役判定 ===== */
+            function evaluate7(cards) {
+                let best = null; const n = cards.length;
+                for (let a = 0; a < n - 4; a++)
+                    for (let b = a + 1; b < n - 3; b++)
+                        for (let c = b + 1; c < n - 2; c++)
+                            for (let d = c + 1; d < n - 1; d++)
+                                for (let e = d + 1; e < n; e++) {
+                                    const five = [cards[a], cards[b], cards[c], cards[d], cards[e]];
+                                    const sc = evaluate5(five);
+                                    if (!best || compareScore(sc, best) > 0) best = sc;
+                                }
+                return best; // {rank,kickers,best5:[...5cards]}
+            }
+            function evaluate5(cards) {
+                const vals = cards.map(c => c.val).sort((a, b) => b - a), suits = cards.map(c => c.s);
+                const counts = {}; for (const v of vals) counts[v] = (counts[v] || 0) + 1;
+                const groups = Object.entries(counts).map(([v, c]) => ({ v: +v, c }))
+                    .sort((a, b) => (b.c - a.c) || (b.v - a.v));
+                const isFlush = suits.every(s => s === suits[0]); const uniq = [...new Set(vals)];
+                let isStraight = false, top = 0;
+                if (uniq.length >= 5) {
+                    for (let i = 0; i <= uniq.length - 5; i++) {
+                        if (uniq[i] - 1 === uniq[i + 1] && uniq[i + 1] - 1 === uniq[i + 2] && uniq[i + 2] - 1 === uniq[i + 3] && uniq[i + 3] - 1 === uniq[i + 4]) { isStraight = true; top = uniq[i]; break; }
+                    }
+                    const wheel = [14, 5, 4, 3, 2]; if (!isStraight && wheel.every(v => uniq.includes(v))) { isStraight = true; top = 5; }
+                }
+                let rank, kickers;
+                if (isFlush && isStraight) { rank = 8; kickers = [top]; }
+                else if (groups[0].c === 4) { rank = 7; const kick = vals.find(v => v !== groups[0].v); kickers = [groups[0].v, kick]; }
+                else if (groups[0].c === 3 && groups[1]?.c >= 2) { rank = 6; kickers = [groups[0].v, groups[1].v]; }
+                else if (isFlush) { rank = 5; kickers = vals; }
+                else if (isStraight) { rank = 4; kickers = [top]; }
+                else if (groups[0].c === 3) { rank = 3; const ks = vals.filter(v => v !== groups[0].v).slice(0, 2); kickers = [groups[0].v, ...ks]; }
+                else if (groups[0].c === 2 && groups[1]?.c === 2) {
+                    const rest = vals.find(v => v !== groups[0].v && v !== groups[1].v);
+                    const hi = Math.max(groups[0].v, groups[1].v), lo = Math.min(groups[0].v, groups[1].v);
+                    rank = 2; kickers = [hi, lo, rest];
+                } else if (groups[0].c === 2) {
+                    const ks = vals.filter(v => v !== groups[0].v).slice(0, 3); rank = 1; kickers = [groups[0].v, ...ks];
+                } else { rank = 0; kickers = vals; }
+                return { rank, kickers, best5: cards };
+            }
+            function compareScore(a, b) {
+                if (a.rank !== b.rank) return a.rank - b.rank;
+                for (let i = 0; i < Math.max(a.kickers.length, b.kickers.length); i++) {
+                    const av = a.kickers[i] || 0, bv = b.kickers[i] || 0;
+                    if (av !== bv) return av - bv;
+                }
+                return 0;
+            }
+
+            /* ===== アクション処理（ホスト） ===== */
+            async function handleActionAsHost(ev) {
+                const gs = (await get(RG())).val(); if (!gs) return;
+                if (ev.seat !== gs.turn) return;
+
+                let stage = gs.stage, turn = gs.turn, currentBet = gs.currentBet || 0, lastRaise = gs.lastRaise || BB, lastAggressor = gs.lastAggressor ?? -1;
+                const stacks = [...(gs.stacks || [])], inHand = [...(gs.inHand || [])], allin = [...(gs.allin || [])], streetBet = [...(gs.streetBet || [])], acted = [...(gs.acted || Array(seats).fill(false))];
+                const board = [...(gs.board || [])]; let pot = gs.pot || 0; const paid = [...(gs.paid || Array(seats).fill(0))];
+
+                const pay = (seat, amt) => { const give = Math.max(0, Math.min(amt, stacks[seat])); stacks[seat] -= give; streetBet[seat] += give; paid[seat] += give; if (stacks[seat] === 0) allin[seat] = true; return give; };
+                const toCall = Math.max(0, currentBet - (streetBet[turn] || 0));
+
+                if (ev.action === 'fold') {
+                    inHand[turn] = false; allin[turn] = false; acted[turn] = true;
+                } else if (ev.action === 'checkcall') {
+                    if (toCall > 0) { pay(turn, toCall); acted[turn] = true; } else { acted[turn] = true; }
+                } else if (ev.action === 'betraise') {
+                    // 入力は「レイズ後の合計額（raise-to）」として扱う
+                    let raiseTo = Math.round((+ev.amount || 0) / 100) * 100;
+                    const myPut = (streetBet[turn] || 0);
+                    let target, need;
+
+                    if (currentBet === 0) {
+                        // そのストリート初回ベット（フロップ以降など）
+                        // 最低ベットは BB 相当（ゲーム設定によっては他ルールもあるが簡易に BB）
+                        const minFirstBet = Math.max(BB, 0);
+                        target = Math.max(minFirstBet, raiseTo);  // 「ベット後の自分の合計拠出額」
+                        need = target - myPut;                  // 追加で出す差額のみ
+                        if (need > 0) {
+                            pay(turn, need);
+                            // 初回ベットは new currentBet
+                            currentBet = streetBet[turn];
+                            lastRaise = currentBet;              // 次回の最小レイズ幅
+                            lastAggressor = turn;
+                            for (let i = 0; i < seats; i++) acted[i] = (i === turn);
+                        } else {
+                            // 追加ゼロならチェック扱い
+                            acted[turn] = true;
+                        }
+
+                    } else {
+                        // 既にベットがある：raise-to は「currentBet + lastRaise」以上
+                        const minRaiseTo = currentBet + lastRaise;
+                        target = Math.max(minRaiseTo, raiseTo);
+                        need = target - myPut;
+
+                        if (need > 0) {
+                            const before = streetBet[turn];
+                            pay(turn, need);
+                            const after = streetBet[turn];
+                            const effective = after - currentBet;   // 実質どれだけ current を上回ったか
+
+                            if (effective > 0) {
+                                // ちゃんと上回った
+                                currentBet = after;
+
+                                if (effective >= lastRaise) {
+                                    // フルレイズ → アクション再オープン
+                                    lastRaise = effective;
+                                    lastAggressor = turn;
+                                    for (let i = 0; i < seats; i++) acted[i] = (i === turn);
+                                } else {
+                                    // ショートのオールイン等：再オープンなし
+                                    acted[turn] = true;
+                                }
                             } else {
-                                // ショートのオールイン等：再オープンなし
+                                // 事実上 raise になっていない（到達できず）→ コール扱い（acted 済み）
                                 acted[turn] = true;
                             }
                         } else {
-                            // 事実上 raise になっていない（到達できず）→ コール扱い（acted 済み）
+                            // 追加ゼロ：toCall が残っていればコール、無ければチェック
+                            if (toCall > 0) { pay(turn, toCall); }
                             acted[turn] = true;
                         }
-                    } else {
-                        // 追加ゼロ：toCall が残っていればコール、無ければチェック
-                        if (toCall > 0) { pay(turn, toCall); }
-                        acted[turn] = true;
                     }
                 }
-            }
 
 
-            const alive = onlyOneAlive(inHand);
-            if (alive.cnt === 1) {
-                for (let i = 0; i < seats; i++) { pot += streetBet[i]; streetBet[i] = 0; }
-                stacks[alive.last] += pot; pot = 0;
-                await update(RG(), { stage: 'showdown', turn: -1, pot, streetBet, stacks, inHand, allin, board, acted, paid, resolved: true, statusText: `${POS_LABEL[alive.last]} の勝ち（フォールド）`, winner: { seats: [alive.last], role: '—' } });
-                showWinnerBanner([alive.last], '—', []);
-                return;
-            }
-
-            if (everyoneSettled({ stage, currentBet, lastRaise, streetBet, inHand, allin, acted })) {
-                for (let i = 0; i < seats; i++) { pot += streetBet[i]; streetBet[i] = 0; }
-                if (stage === 'river') {
-                    await update(RG(), { pot, streetBet, paid });
-                    await resolveShowdownOnce();
+                const alive = onlyOneAlive(inHand);
+                if (alive.cnt === 1) {
+                    for (let i = 0; i < seats; i++) { pot += streetBet[i]; streetBet[i] = 0; }
+                    stacks[alive.last] += pot; pot = 0;
+                    await update(RG(), { stage: 'showdown', turn: -1, pot, streetBet, stacks, inHand, allin, board, acted, paid, resolved: true, statusText: `${POS_LABEL[alive.last]} の勝ち（フォールド）`, winner: { seats: [alive.last], role: '—' } });
+                    showWinnerBanner([alive.last], '—', []);
                     return;
                 }
-                await update(RG(), { pot, streetBet, paid });
-                await hostOpenNextStreet({ stage, board, pot, streetBet, inHand, btn: gs.btn });
-                return;
+
+                if (everyoneSettled({ stage, currentBet, lastRaise, streetBet, inHand, allin, acted })) {
+                    for (let i = 0; i < seats; i++) { pot += streetBet[i]; streetBet[i] = 0; }
+                    if (stage === 'river') {
+                        await update(RG(), { pot, streetBet, paid });
+                        await resolveShowdownOnce();
+                        return;
+                    }
+                    await update(RG(), { pot, streetBet, paid });
+                    await hostOpenNextStreet({ stage, board, pot, streetBet, inHand, btn: gs.btn });
+                    return;
+                }
+
+                let nextSeat = turn;
+                for (let k = 0; k < seats + 2; k++) { nextSeat = (nextSeat + 1) % seats; if (inHand[nextSeat] && !allin[nextSeat]) break; }
+                await update(RG(), {
+                    turn: nextSeat, currentBet, lastRaise, lastAggressor,
+                    stacks, inHand, allin, streetBet, acted, paid,
+                    statusText: `${stage.toUpperCase()}：先行 ${nextSeat >= 0 ? POS_LABEL[nextSeat] : '—'}`
+                });
             }
 
-            let nextSeat = turn;
-            for (let k = 0; k < seats + 2; k++) { nextSeat = (nextSeat + 1) % seats; if (inHand[nextSeat] && !allin[nextSeat]) break; }
-            await update(RG(), {
-                turn: nextSeat, currentBet, lastRaise, lastAggressor,
-                stacks, inHand, allin, streetBet, acted, paid,
-                statusText: `${stage.toUpperCase()}：先行 ${nextSeat >= 0 ? POS_LABEL[nextSeat] : '—'}`
-            });
-        }
+            /* ===== 精算ロック & サイドポット精算 ===== */
+            async function tryLockResolve() {
+                const res = await runTransaction(child(RG(), 'resolved'), curr => {
+                    if (curr === true) return curr;
+                    return true;
+                }, { applyLocally: false });
+                return res.committed && res.snapshot.val() === true;
+            }
+            async function resolveShowdownOnce() {
+                const g0 = (await get(RG())).val();
+                if (g0?.resolved) return;
+                const locked = await tryLockResolve();
+                if (!locked) return;
 
-        /* ===== 精算ロック & サイドポット精算 ===== */
-        async function tryLockResolve() {
-            const res = await runTransaction(child(RG(), 'resolved'), curr => {
-                if (curr === true) return curr;
-                return true;
-            }, { applyLocally: false });
-            return res.committed && res.snapshot.val() === true;
-        }
-        async function resolveShowdownOnce() {
-            const g0 = (await get(RG())).val();
-            if (g0?.resolved) return;
-            const locked = await tryLockResolve();
-            if (!locked) return;
+                const g = (await get(RG())).val(); if (!g) return;
+                const holes = (await get(RH())).val() || {};
+                const alive = (g.inHand || []).map((v, i) => v ? i : null).filter(v => v != null);
+                if (alive.length === 0) {
+                    await update(RG(), { stage: 'showdown', turn: -1, pot: 0, streetBet: Array(seats).fill(0) });
+                    return;
+                }
 
-            const g = (await get(RG())).val(); if (!g) return;
-            const holes = (await get(RH())).val() || {};
-            const alive = (g.inHand || []).map((v, i) => v ? i : null).filter(v => v != null);
-            if (alive.length === 0) {
-                await update(RG(), { stage: 'showdown', turn: -1, pot: 0, streetBet: Array(seats).fill(0) });
-                return;
+                // paid[] からサイドポットを構築・分配
+                const paid = [...(g.paid || Array(seats).fill(0))];
+                const pots = buildSidePots(paid, g.inHand || []);
+
+                const scores = alive.map(i => ({ i, sc: evaluate7([...(holes[i] || []), ...(g.board || [])]) }))
+                    .sort((a, b) => compareScore(a.sc, b.sc)).reverse();
+
+                const stacks = [...(g.stacks || [])];
+                distributePots(pots, scores, stacks);
+
+                // 表示用
+                const role = HAND_NAME_JP[scores[0].sc.rank] || '—';
+                const best5 = scores[0].sc.best5 || [];
+                const topKey = (sc) => sc.rank + '|' + (sc.kickers || []).join(',');
+                const topWinners = scores.filter(x => topKey(x.sc) === topKey(scores[0].sc)).map(x => x.i);
+
+                await update(RG(), {
+                    stage: 'showdown', turn: -1,
+                    pot: 0, streetBet: Array(seats).fill(0),
+                    stacks, resolved: true,
+                    statusText: `${topWinners.map(i => POS_LABEL[i]).join(', ')} の勝ち！（${role}）`,
+                    winner: { seats: topWinners, role, hand: scores[0].sc.kickers }
+                });
+
+                showWinnerBanner(topWinners, role, best5);
             }
 
-            // paid[] からサイドポットを構築・分配
-            const paid = [...(g.paid || Array(seats).fill(0))];
-            const pots = buildSidePots(paid, g.inHand || []);
+            /* ===== クリック連打ロック ===== */
+            let clickLock = false;
+            function withClickLock(fn) {
+                return async (...args) => {
+                    if (clickLock) return;
+                    try {
+                        clickLock = true;
+                        $('#fold,#checkCall,#betRaise').prop('disabled', true);
+                        await fn(...args);
+                    } finally {
+                        clickLock = false;
+                    }
+                };
+            }
 
-            const scores = alive.map(i => ({ i, sc: evaluate7([...(holes[i] || []), ...(g.board || [])]) }))
-                .sort((a, b) => compareScore(a.sc, b.sc)).reverse();
-
-            const stacks = [...(g.stacks || [])];
-            distributePots(pots, scores, stacks);
-
-            // 表示用
-            const role = HAND_NAME_JP[scores[0].sc.rank] || '—';
-            const best5 = scores[0].sc.best5 || [];
-            const topKey = (sc) => sc.rank + '|' + (sc.kickers || []).join(',');
-            const topWinners = scores.filter(x => topKey(x.sc) === topKey(scores[0].sc)).map(x => x.i);
-
-            await update(RG(), {
-                stage: 'showdown', turn: -1,
-                pot: 0, streetBet: Array(seats).fill(0),
-                stacks, resolved: true,
-                statusText: `${topWinners.map(i => POS_LABEL[i]).join(', ')} の勝ち！（${role}）`,
-                winner: { seats: topWinners, role, hand: scores[0].sc.kickers }
-            });
-
-            showWinnerBanner(topWinners, role, best5);
-        }
-
-        /* ===== クリック連打ロック ===== */
-        let clickLock = false;
-        function withClickLock(fn) {
-            return async (...args) => {
-                if (clickLock) return;
+            /* ===== UI Bindings ===== */
+            $('#createRoom').on('click', async () => {
                 try {
-                    clickLock = true;
-                    $('#fold,#checkCall,#betRaise').prop('disabled', true);
-                    await fn(...args);
+                    roomId = $('#roomId').val().trim(); myName = $('#name').val().trim(); seats = +$('#seatCount').val();
+                    if (!roomId || !myName) throw new Error('ルームIDと名前は必須です');
+                    if (seats < 2 || seats > 6) throw new Error('席数は2〜6の範囲です');
+                    await joinAs(true);
+                } catch (e) { $('#lobbyMsg').text(e.message || String(e)); }
+            });
+            $('#joinRoom').on('click', async () => {
+                try {
+                    roomId = $('#roomId').val().trim(); myName = $('#name').val().trim();
+                    if (!roomId || !myName) throw new Error('ルームIDと名前は必須です');
+                    await joinAs(false);
+                } catch (e) { $('#lobbyMsg').text(e.message || String(e)); }
+            });
+            $('#newHand').on('click', async () => { if (!isHost) return; await hostNewHand(); });
+            $('#fold').off('click').on('click', withClickLock(async () => {
+                const g = (await get(RG())).val(); if (!g || typeof mySeat !== 'number' || g.turn !== mySeat) return;
+                await sendAction('fold');
+            }));
+            $('#checkCall').off('click').on('click', withClickLock(async () => {
+                const g = (await get(RG())).val(); if (!g || typeof mySeat !== 'number' || g.turn !== mySeat) return;
+                await sendAction('checkcall');
+            }));
+            $('#betRaise').off('click').on('click', withClickLock(async () => {
+                const g = (await get(RG())).val(); if (!g || typeof mySeat !== 'number' || g.turn !== mySeat) return;
+                let amt = Math.round((+$('#betSize').val() || 0) / 100) * 100; if (amt <= 0) { $status.text('有効な額を入力'); return; }
+                await sendAction('betraise', amt);
+            }));
+            $('#show').on('click', async () => {
+                if (!isHost) return;
+                const g = (await get(RG())).val(); if (!g) return;
+                if (g.resolved) { $status.text('ショーダウンは既に精算済みです'); return; }
+                await resolveShowdownOnce();
+            });
+            $('#resetStacks').on('click', async () => {
+                if (!isHost) return;
+                const g = (await get(RG())).val() || {};
+                if (g.stage && g.stage !== 'showdown') { $status.text('ハンド進行中はスタックをリセットできません'); return; }
+
+                const meta = (await get(RM())).val() || {};
+                const newBuyIn = Math.min(50000, Math.max(10000, Math.round((+$('#buyIn').val() || meta.buyin || 20000) / 1000) * 1000));
+                await update(RM(), { buyin: newBuyIn }); BUYIN = newBuyIn;
+
+                const players = (await get(RP())).val() || {};
+                const stacksArr = Array(seats).fill(0);
+                for (const p of Object.values(players)) {
+                    const seat = p.seat;
+                    if (typeof seat === 'number' && seat < seats) {
+                        stacksArr[seat] = BUYIN;
+                        await update(child(RP(), p.uid), { stack: BUYIN });
+                    }
+                }
+                await update(RG(), { stacks: stacksArr, pot: 0, streetBet: Array(seats).fill(0), paid: Array(seats).fill(0), statusText: `Stacks Reset: Buy-in = ${BUYIN}` });
+                $status.text(`Stacks Reset: Buy-in = ${BUYIN}`);
+            });
+
+            /* 退室 */
+            $('#leave').on('click', async () => {
+                try {
+                    if (roomId && typeof mySeat === 'number') { await releaseSeat(mySeat); await remove(RMe()); }
                 } finally {
-                    clickLock = false;
+                    try { if (auth.currentUser?.isAnonymous) await deleteUser(auth.currentUser); else await signOut(auth); }
+                    catch (e) { await signOut(auth); }
+                    $game.hide(); $lobby.show(); $('#lobbyMsg').text('');
+                    roomId = ""; mySeat = null; isHost = false; handId = null;
                 }
-            };
-        }
+            });
 
-        /* ===== UI Bindings ===== */
-        $('#createRoom').on('click', async () => {
-            try {
-                roomId = $('#roomId').val().trim(); myName = $('#name').val().trim(); seats = +$('#seatCount').val();
-                if (!roomId || !myName) throw new Error('ルームIDと名前は必須です');
-                if (seats < 2 || seats > 6) throw new Error('席数は2〜6の範囲です');
-                await joinAs(true);
-            } catch (e) { $('#lobbyMsg').text(e.message || String(e)); }
-        });
-        $('#joinRoom').on('click', async () => {
-            try {
-                roomId = $('#roomId').val().trim(); myName = $('#name').val().trim();
-                if (!roomId || !myName) throw new Error('ルームIDと名前は必須です');
-                await joinAs(false);
-            } catch (e) { $('#lobbyMsg').text(e.message || String(e)); }
-        });
-        $('#newHand').on('click', async () => { if (!isHost) return; await hostNewHand(); });
-        $('#fold').off('click').on('click', withClickLock(async () => {
-            const g = (await get(RG())).val(); if (!g || typeof mySeat !== 'number' || g.turn !== mySeat) return;
-            await sendAction('fold');
-        }));
-        $('#checkCall').off('click').on('click', withClickLock(async () => {
-            const g = (await get(RG())).val(); if (!g || typeof mySeat !== 'number' || g.turn !== mySeat) return;
-            await sendAction('checkcall');
-        }));
-        $('#betRaise').off('click').on('click', withClickLock(async () => {
-            const g = (await get(RG())).val(); if (!g || typeof mySeat !== 'number' || g.turn !== mySeat) return;
-            let amt = Math.round((+$('#betSize').val() || 0) / 100) * 100; if (amt <= 0) { $status.text('有効な額を入力'); return; }
-            await sendAction('betraise', amt);
-        }));
-        $('#show').on('click', async () => {
-            if (!isHost) return;
-            const g = (await get(RG())).val(); if (!g) return;
-            if (g.resolved) { $status.text('ショーダウンは既に精算済みです'); return; }
-            await resolveShowdownOnce();
-        });
-        $('#resetStacks').on('click', async () => {
-            if (!isHost) return;
-            const g = (await get(RG())).val() || {};
-            if (g.stage && g.stage !== 'showdown') { $status.text('ハンド進行中はスタックをリセットできません'); return; }
+            /* 初期レイアウト */
+            layoutSeats();
 
-            const meta = (await get(RM())).val() || {};
-            const newBuyIn = Math.min(50000, Math.max(10000, Math.round((+$('#buyIn').val() || meta.buyin || 20000) / 1000) * 1000));
-            await update(RM(), { buyin: newBuyIn }); BUYIN = newBuyIn;
-
-            const players = (await get(RP())).val() || {};
-            const stacksArr = Array(seats).fill(0);
-            for (const p of Object.values(players)) {
-                const seat = p.seat;
-                if (typeof seat === 'number' && seat < seats) {
-                    stacksArr[seat] = BUYIN;
-                    await update(child(RP(), p.uid), { stack: BUYIN });
-                }
-            }
-            await update(RG(), { stacks: stacksArr, pot: 0, streetBet: Array(seats).fill(0), paid: Array(seats).fill(0), statusText: `Stacks Reset: Buy-in = ${BUYIN}` });
-            $status.text(`Stacks Reset: Buy-in = ${BUYIN}`);
-        });
-
-        /* 退室 */
-        $('#leave').on('click', async () => {
-            try {
-                if (roomId && typeof mySeat === 'number') { await releaseSeat(mySeat); await remove(RMe()); }
-            } finally {
-                try { if (auth.currentUser?.isAnonymous) await deleteUser(auth.currentUser); else await signOut(auth); }
-                catch (e) { await signOut(auth); }
-                $game.hide(); $lobby.show(); $('#lobbyMsg').text('');
-                roomId = ""; mySeat = null; isHost = false; handId = null;
-            }
-        });
-
-        /* 初期レイアウト */
-        layoutSeats();
-
-    </script>
-</body>
+        </script>
+    </body>
 
 </html>
